@@ -395,10 +395,25 @@ def show_optimizer_mode():
         ema_max = st.sidebar.number_input("Máximo", 10, 50, 15, key="ema_max")
         ema_step = st.sidebar.number_input("Passo", 1, 5, 2, key="ema_step")
         
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("**⚠️ Gestão de Risco (ATR)**")
+        
+        st.sidebar.markdown("**Stop Loss (ATR x)**")
+        stop_min = st.sidebar.number_input("Mínimo", 0.5, 2.0, 1.0, 0.5, key="cacas_stop_min")
+        stop_max = st.sidebar.number_input("Máximo", 1.0, 3.0, 2.0, 0.5, key="cacas_stop_max")
+        stop_step = st.sidebar.number_input("Passo", 0.5, 1.0, 0.5, key="cacas_stop_step")
+        
+        st.sidebar.markdown("**Target (Stop x)**")
+        target_min = st.sidebar.number_input("Mínimo", 1.0, 3.0, 1.5, 0.5, key="cacas_target_min")
+        target_max = st.sidebar.number_input("Máximo", 2.0, 5.0, 3.0, 0.5, key="cacas_target_max")
+        target_step = st.sidebar.number_input("Passo", 0.5, 1.0, 0.5, key="cacas_target_step")
+        
         param_grid = {
             'upper': list(range(upper_min, upper_max + 1, upper_step)),
             'under': list(range(under_min, under_max + 1, under_step)),
             'ema': list(range(ema_min, ema_max + 1, ema_step)),
+            'stop_multiplier': [round(x, 1) for x in np.arange(stop_min, stop_max + 0.1, stop_step)],
+            'target_multiplier': [round(x, 1) for x in np.arange(target_min, target_max + 0.1, target_step)],
         }
     
     elif strategy_name == "Moving Average Cross":
@@ -412,9 +427,24 @@ def show_optimizer_mode():
         slow_max = st.sidebar.number_input("Máximo", 20, 100, 30, key="slow_max")
         slow_step = st.sidebar.number_input("Passo", 1, 10, 5, key="slow_step")
         
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("**⚠️ Gestão de Risco (ATR)**")
+        
+        st.sidebar.markdown("**Stop Loss (ATR x)**")
+        stop_min = st.sidebar.number_input("Mínimo", 0.5, 2.0, 1.0, 0.5, key="ma_stop_min")
+        stop_max = st.sidebar.number_input("Máximo", 1.0, 3.0, 2.0, 0.5, key="ma_stop_max")
+        stop_step = st.sidebar.number_input("Passo", 0.5, 1.0, 0.5, key="ma_stop_step")
+        
+        st.sidebar.markdown("**Target (Stop x)**")
+        target_min = st.sidebar.number_input("Mínimo", 1.0, 3.0, 1.5, 0.5, key="ma_target_min")
+        target_max = st.sidebar.number_input("Máximo", 2.0, 5.0, 3.0, 0.5, key="ma_target_max")
+        target_step = st.sidebar.number_input("Passo", 0.5, 1.0, 0.5, key="ma_target_step")
+        
         param_grid = {
             'fast_period': list(range(fast_min, fast_max + 1, fast_step)),
             'slow_period': list(range(slow_min, slow_max + 1, slow_step)),
+            'stop_multiplier': [round(x, 1) for x in np.arange(stop_min, stop_max + 0.1, stop_step)],
+            'target_multiplier': [round(x, 1) for x in np.arange(target_min, target_max + 0.1, target_step)],
         }
     
     elif strategy_name == "MSS (Market Structure)":
@@ -446,7 +476,7 @@ def show_optimizer_mode():
         ["profit_factor", "win_rate", "sharpe_ratio", "total_return", "expectancy"],
         format_func=lambda x: {
             'profit_factor': 'Profit Factor',
-            'win_rate': 'Win Rate (%)',
+            'win_rate': 'Win Rate Ajustado (%)',
             'sharpe_ratio': 'Sharpe Ratio',
             'total_return': 'Retorno Total (%)',
             'expectancy': 'Expectância (R)'
@@ -508,11 +538,11 @@ def show_optimizer_mode():
                 
                 metrics = backtest_results['metrics']
                 
-                # Salva resultado
+                # Salva resultado (usa win_rate_adjusted)
                 result = {
                     **params,
                     'total_trades': metrics['total_trades'],
-                    'win_rate': metrics['win_rate'],
+                    'win_rate': metrics['win_rate_adjusted'],  # ✅ CORRIGIDO: usa ajustado
                     'profit_factor': metrics['profit_factor'],
                     'total_return': metrics['total_return'],
                     'sharpe_ratio': metrics['sharpe_ratio'],
